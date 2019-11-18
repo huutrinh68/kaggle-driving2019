@@ -1,4 +1,5 @@
 .vscode
 data
 logs
+eda
 __pycache__
