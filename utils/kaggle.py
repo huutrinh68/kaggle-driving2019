@@ -7,6 +7,8 @@ img_width = 1024
 img_height = (img_width//16)*5
 model_scale = 8
 
+distance_thresh_clear = 2
+
 camera_matrix = np.array([
     [2304.5479, 0,  1686.2379],
     [0, 2305.8757, 1354.9849],
@@ -202,3 +204,25 @@ def get_mask_and_regr(img, labels, flip=False):
         mask = np.array(mask[:,::-1])
         regr = np.array(regr[:,::-1])
     return mask, regr
+
+
+def convert_3d_to_2d(x, y, z, fx = 2304.5479, fy = 2305.8757, cx = 1686.2379, cy = 1354.9849):
+    # stolen from https://www.kaggle.com/theshockwaverider/eda-visualization-baseline
+    return x * fx / z + cx, y * fy / z + cy
+
+
+# def distance_fn(xyz):
+#     x, y, z = xyz
+#     xx = -x if flipped else x
+#     slope_err = (xzy_slope.predict([[xx,z]])[0] - y)**2
+#     x, y = convert_3d_to_2d(x, y, z)
+#     y, x = x, y
+#     x = (x - IMG_SHAPE[0] // 2) * IMG_HEIGHT / (IMG_SHAPE[0] // 2) / MODEL_SCALE
+#     y = (y + IMG_SHAPE[1] // 6) * IMG_WIDTH / (IMG_SHAPE[1] * 4 / 3) / MODEL_SCALE
+#     return max(0.2, (x-r)**2 + (y-c)**2) + max(0.4, slope_err)
+
+
+# def optimize_xy(r, c, x0, y0, z0, flipped=False):
+#     res = minimize(distance_fn, [x0, y0, z0], method='Powell')
+#     x_new, y_new, z_new = res.x
+#     return x_new, y_new, z_new
