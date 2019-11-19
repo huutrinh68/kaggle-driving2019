@@ -3,6 +3,9 @@ from math import sin, cos
 import cv2
 
 
+# original shape
+img_shape = (320, 1024, 3)
+
 img_width = 1024
 img_height = (img_width//16)*5
 model_scale = 8
@@ -211,18 +214,17 @@ def convert_3d_to_2d(x, y, z, fx = 2304.5479, fy = 2305.8757, cx = 1686.2379, cy
     return x * fx / z + cx, y * fy / z + cy
 
 
-# def distance_fn(xyz):
-#     x, y, z = xyz
-#     xx = -x if flipped else x
-#     slope_err = (xzy_slope.predict([[xx,z]])[0] - y)**2
-#     x, y = convert_3d_to_2d(x, y, z)
-#     y, x = x, y
-#     x = (x - IMG_SHAPE[0] // 2) * IMG_HEIGHT / (IMG_SHAPE[0] // 2) / MODEL_SCALE
-#     y = (y + IMG_SHAPE[1] // 6) * IMG_WIDTH / (IMG_SHAPE[1] * 4 / 3) / MODEL_SCALE
-#     return max(0.2, (x-r)**2 + (y-c)**2) + max(0.4, slope_err)
+def optimize_xy(r, c, x0, y0, z0, model, flipped=False):
+    def distance_fn(xyz):
+        x, y, z = xyz
+        xx = -x if flipped else x
+        slope_err = (xzy_slope.predict([[xx,z]])[0] - y)**2
+        x, y = convert_3d_to_2d(x, y, z)
+        y, x = x, y
+        x = (x - img_shape[0] // 2) * img_height / (img_shape[0] // 2) / model_scale
+        y = (y + img_shape[1] // 6) * img_height / (img_shape[1] * 4 / 3) / model_scale
+        return max(0.2, (x-r)**2 + (y-c)**2) + max(0.4, slope_err)
 
-
-# def optimize_xy(r, c, x0, y0, z0, flipped=False):
-#     res = minimize(distance_fn, [x0, y0, z0], method='Powell')
-#     x_new, y_new, z_new = res.x
-#     return x_new, y_new, z_new
+    res = minimize(distance_fn, [x0, y0, z0], method='Powell')
+    x_new, y_new, z_new = res.x
+    return x_new, y_new, z_new
