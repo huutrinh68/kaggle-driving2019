@@ -1,6 +1,7 @@
 import numpy as np 
 from math import sin, cos
 import cv2
+from scipy.optimize import minimize
 
 
 # original shape
@@ -218,7 +219,7 @@ def optimize_xy(r, c, x0, y0, z0, model, flipped=False):
     def distance_fn(xyz):
         x, y, z = xyz
         xx = -x if flipped else x
-        slope_err = (xzy_slope.predict([[xx,z]])[0] - y)**2
+        slope_err = (model.predict([[xx,z]])[0] - y)**2
         x, y = convert_3d_to_2d(x, y, z)
         y, x = x, y
         x = (x - img_shape[0] // 2) * img_height / (img_shape[0] // 2) / model_scale
