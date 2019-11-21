@@ -194,31 +194,60 @@ def main():
             plt.savefig(f'eda/img-view_coords_{idx}.png')
 
     
-    img0 = imread(opj(cfg.train_images, train.iloc[0]['ImageId'] + '.jpg'))
-    img = kaggle.preprocess_image(img0)
+    if 0:
+        img0 = imread(opj(cfg.train_images, train.iloc[0]['ImageId'] + '.jpg'))
+        img = kaggle.preprocess_image(img0)
 
-    mask, regr = kaggle.get_mask_and_regr(img0, train.iloc[0]['PredictionString'])
-    print('img.shape', img.shape, 'std:', np.std(img))
-    print('mask.shape', mask.shape, 'std:', np.std(mask))
-    print('regr.shape', regr.shape, 'std:', np.std(regr))
+        mask, regr = kaggle.get_mask_and_regr(img0, train.iloc[0]['PredictionString'])
+        # print('img.shape', img.shape, 'std:', np.std(img))
+        # print('mask.shape', mask.shape, 'std:', np.std(mask))
+        # print('regr.shape', regr.shape, 'std:', np.std(regr))
 
-    plt.figure(figsize=(16,16))
-    plt.title('Processed image')
-    plt.imshow(img)
-    # plt.show()
-    plt.savefig('eda/processed_image.png')
+        plt.figure(figsize=(16,16))
+        plt.title('Processed image')
+        plt.imshow(img)
+        # plt.show()
+        plt.savefig('eda/processed_image.png')
 
-    plt.figure(figsize=(16,16))
-    plt.title('Detection Mask')
-    plt.imshow(mask)
-    # plt.show()
-    plt.savefig('eda/detection_mask.png')
+        plt.figure(figsize=(16,16))
+        plt.title('Detection Mask')
+        plt.imshow(mask)
+        # plt.show()
+        plt.savefig('eda/detection_mask.png')
 
-    plt.figure(figsize=(16,16))
-    plt.title('Yaw values')
-    plt.imshow(regr[:,:,-2])
-    # plt.show()
-    plt.savefig('eda/yaw_values.png')
+        plt.figure(figsize=(16,16))
+        plt.title('Yaw values')
+        plt.imshow(regr[:,:,-2])
+        # plt.show()
+        plt.savefig('eda/yaw_values.png')
+
+    #############
+    if 1:
+        regr_model = kaggle.get_regr_model(train)
+
+        for idx in range(2):
+            fig, axes = plt.subplots(1, 2, figsize=(20,20))
+            
+            for ax_i in range(2):
+                img0 = imread(opj(cfg.train_images, train['ImageId'].iloc[idx] + '.jpg'))
+                if ax_i == 1:
+                    img0 = img0[:,::-1]
+                img = kaggle.preprocess_image(img0, ax_i==1)
+                mask, regr = kaggle.get_mask_and_regr(img0, train['PredictionString'][idx], ax_i==1)
+                regr = np.rollaxis(regr, 2, 0)
+                coords = kaggle.extract_coords(np.concatenate([mask[None], regr], 0), regr_model, ax_i==1)
+                
+                axes[ax_i].set_title('Flip = {}'.format(ax_i==1))
+                axes[ax_i].imshow(kaggle.visualize(img0, coords))
+            # plt.show()
+            plt.savefig(f'eda/{idx}_{ax_i}.png')
+
+    
+    
+
+        
+                
+
 
 
 

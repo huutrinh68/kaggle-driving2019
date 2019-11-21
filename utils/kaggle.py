@@ -1,7 +1,10 @@
+import pandas as pd
 import numpy as np 
 from math import sin, cos
 import cv2
 from scipy.optimize import minimize
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error
 
 
 # original shape
@@ -68,8 +71,8 @@ def euler_to_rot(yaw, pitch, roll):
     # print(f'case1: \n{np.dot(Y, np.dot(P, R))}')
     # print('\n')
     # print(f'case2: \n{np.dot(R, np.dot(Y, P))}')
-    # return np.dot(Y, np.dot(P, R))
-    return np.dot(R, np.dot(Y, P))
+    return np.dot(Y, np.dot(P, R))
+    # return np.dot(R, np.dot(Y, P))
 
 
 def draw_line(image, points):
@@ -81,39 +84,13 @@ def draw_line(image, points):
     return image
 
 
-# def draw_line(image, points):
-#     color = (255, 0, 0)
-#     cv2.line(image, tuple(points[1][:2]), tuple(points[2][:2]), color, 16)
-#     cv2.line(image, tuple(points[1][:2]), tuple(points[4][:2]), color, 16)
-
-#     cv2.line(image, tuple(points[1][:2]), tuple(points[5][:2]), color, 16)
-#     cv2.line(image, tuple(points[2][:2]), tuple(points[3][:2]), color, 16)
-#     cv2.line(image, tuple(points[2][:2]), tuple(points[6][:2]), color, 16)
-#     cv2.line(image, tuple(points[3][:2]), tuple(points[4][:2]), color, 16)
-#     cv2.line(image, tuple(points[3][:2]), tuple(points[7][:2]), color, 16)
-
-#     cv2.line(image, tuple(points[4][:2]), tuple(points[8][:2]), color, 16)
-#     cv2.line(image, tuple(points[5][:2]), tuple(points[8][:2]), color, 16)
-
-#     cv2.line(image, tuple(points[5][:2]), tuple(points[6][:2]), color, 16)
-#     cv2.line(image, tuple(points[6][:2]), tuple(points[7][:2]), color, 16)
-#     cv2.line(image, tuple(points[7][:2]), tuple(points[8][:2]), color, 16)
-#     return image
-
-
 def draw_points(image, points):
     for (p_x, p_y, p_z) in points:
-        cv2.circle(image, (p_x, p_y), int(1000 / p_z), (0, 255, 0), -1)
+        radius = int(1000 / p_z)
+        cv2.circle(image, (p_x, p_y), radius, (0, 255, 0), -1)
 #         if p_x > image.shape[1] or p_y > image.shape[0]:
 #             print('Point', p_x, p_y, 'is out of image with shape', image.shape)
     return image
-
-# def draw_points(image, points):
-#     image = np.array(image)
-#     for (p_x, p_y, p_z) in points:
-#         print(f'p_x, p_y: {p_x}, {p_y}')
-#         cv2.circle(image, (p_x, p_y), 5, (255, 0, 0), -1)
-#     return image
 
 
 def visualize(img, coords):
@@ -143,7 +120,6 @@ def visualize(img, coords):
         img_cor_points[:, 0] /= img_cor_points[:, 2]
         img_cor_points[:, 1] /= img_cor_points[:, 2]
         img_cor_points = img_cor_points.astype(int)
-
         # Drawing
         img = draw_line(img, img_cor_points)
         img = draw_points(img, img_cor_points[-1:])
@@ -215,11 +191,11 @@ def convert_3d_to_2d(x, y, z, fx = 2304.5479, fy = 2305.8757, cx = 1686.2379, cy
     return x * fx / z + cx, y * fy / z + cy
 
 
-def optimize_xy(r, c, x0, y0, z0, model, flipped=False):
+def optimize_xy(r, c, x0, y0, z0, regr_model, flipped=False):
     def distance_fn(xyz):
         x, y, z = xyz
         xx = -x if flipped else x
-        slope_err = (model.predict([[xx,z]])[0] - y)**2
+        slope_err = (regr_model.predict([[xx, z]])[0] - y)**2
         x, y = convert_3d_to_2d(x, y, z)
         y, x = x, y
         x = (x - img_shape[0] // 2) * img_height / (img_shape[0] // 2) / model_scale
@@ -228,4 +204,68 @@ def optimize_xy(r, c, x0, y0, z0, model, flipped=False):
 
     res = minimize(distance_fn, [x0, y0, z0], method='Powell')
     x_new, y_new, z_new = res.x
-    return x_new, y_new, z_new
+    # return x_new, y_new, z_new
+    return x0, y0, z0
+
+
+def clear_duplicates(coords):
+    for c1 in coords:
+        xyz1 = np.array([c1['x'], c1['y'], c1['z']])
+        for c2 in coords:
+            xyz2 = np.array([c2['x'], c2['y'], c2['z']])
+            distance = np.sqrt(((xyz1 - xyz2)**2).sum())
+            if distance < distance_thresh_clear:
+                if c1['confidence'] < c2['confidence']:
+                    c1['confidence'] = -1
+    return [c for c in coords if c['confidence'] > 0]
+
+
+def extract_coords(prediction, regr_model, flipped=False):
+    logits = prediction[0]
+    regr_output = prediction[1:]
+    points = np.argwhere(logits > 0)
+    col_names = sorted(['x', 'y', 'z', 'yaw', 'pitch_sin', 'pitch_cos', 'roll'])
+    coords = []
+    for r, c in points:
+        regr_dict = dict(zip(col_names, regr_output[:, r, c]))
+        coords.append(_regr_back(regr_dict))
+        coords[-1]['confidence'] = 1 / (1 + np.exp(-logits[r, c]))
+        coords[-1]['x'], coords[-1]['y'], coords[-1]['z'] = \
+                optimize_xy(r, c,
+                            coords[-1]['x'],
+                            coords[-1]['y'],
+                            coords[-1]['z'], 
+                            regr_model, flipped)
+    coords = clear_duplicates(coords)
+    return coords
+
+
+def coords2str(coords, names=['yaw', 'pitch', 'roll', 'x', 'y', 'z', 'confidence']):
+    s = []
+    for c in coords:
+        for n in names:
+            s.append(str(c.get(n, 0)))
+    return ' '.join(s)
+
+
+def get_points_df(df):
+    points_df = pd.DataFrame()
+    for col in ['x', 'y', 'z', 'yaw', 'pitch', 'roll']:
+        arr = []
+        for ps in df['PredictionString']:
+            coords = str2coords(ps)
+            arr += [c[col] for c in coords]
+        points_df[col] = arr
+    return points_df
+
+
+def get_regr_model(df):
+    points_df = get_points_df(df)
+    xzy_slope = LinearRegression()
+    X = points_df[['x', 'z']]
+    y = points_df['y']
+    xzy_slope.fit(X, y)
+
+    print('MAE with x:', mean_absolute_error(y, xzy_slope.predict(X)))
+    print('\ndy/dx = {:.3f}\ndy/dz = {:.3f}'.format(*xzy_slope.coef_))
+    return xzy_slope
