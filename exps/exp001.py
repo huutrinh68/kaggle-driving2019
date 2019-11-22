@@ -8,6 +8,8 @@ from utils.config import Config
 from utils.file import imread
 import utils.kaggle as kaggle
 
+from datasets import dataset_factory
+
 
 # get args from command line --------------------
 def get_args():
@@ -198,6 +200,7 @@ def main():
         img0 = imread(opj(cfg.train_images, train.iloc[0]['ImageId'] + '.jpg'))
         img = kaggle.preprocess_image(img0)
 
+        print(train.iloc[0]['PredictionString'])
         mask, regr = kaggle.get_mask_and_regr(img0, train.iloc[0]['PredictionString'])
         # print('img.shape', img.shape, 'std:', np.std(img))
         # print('mask.shape', mask.shape, 'std:', np.std(mask))
@@ -222,7 +225,7 @@ def main():
         plt.savefig('eda/yaw_values.png')
 
     #############
-    if 1:
+    if 0:
         regr_model = kaggle.get_regr_model(train)
 
         for idx in range(2):
@@ -241,15 +244,29 @@ def main():
                 axes[ax_i].imshow(kaggle.visualize(img0, coords))
             # plt.show()
             plt.savefig(f'eda/{idx}_{ax_i}.png')
-
-    
-    
-
-        
                 
 
+    if 1:
+        dataset = dataset_factory.CarDataset(cfg)
+        img, mask, regr = dataset[0]
 
+        plt.figure(figsize=(16,16))
+        plt.imshow(np.rollaxis(img, 0, 3))
+        # plt.show()
+        plt.savefig(f'eda/img.png')
 
+        plt.figure(figsize=(16,16))
+        plt.imshow(mask)
+        # plt.show()
+        plt.savefig(f'eda/mask.png')
+
+        plt.figure(figsize=(16,16))
+        plt.imshow(regr[:,:,-2])
+        # plt.show()
+        plt.savefig(f'eda/regr.png')
+
+        train_loader = dataset_factory.get_dataloader(cfg.data.train)
+        
 
 if __name__ == "__main__":
     main()

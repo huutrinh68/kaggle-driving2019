@@ -8,10 +8,10 @@ from sklearn.metrics import mean_absolute_error
 
 
 # original shape
-img_shape = (320, 1024, 3)
+img_shape = (2710, 3384, 3)
 
-img_width = 1024
-img_height = (img_width//16)*5
+img_width = img_shape[1]
+img_height = img_width // 4
 model_scale = 8
 
 distance_thresh_clear = 2
@@ -195,17 +195,17 @@ def optimize_xy(r, c, x0, y0, z0, regr_model, flipped=False):
     def distance_fn(xyz):
         x, y, z = xyz
         xx = -x if flipped else x
-        slope_err = (regr_model.predict([[xx, z]])[0] - y)**2
+        slope_err = (regr_model.predict([[xx,z]])[0] - y)**2
+        
         x, y = convert_3d_to_2d(x, y, z)
         y, x = x, y
         x = (x - img_shape[0] // 2) * img_height / (img_shape[0] // 2) / model_scale
-        y = (y + img_shape[1] // 6) * img_height / (img_shape[1] * 4 / 3) / model_scale
+        y = (y + img_shape[1] // 6) * img_width / (img_shape[1] * 4 / 3) / model_scale
         return max(0.2, (x-r)**2 + (y-c)**2) + max(0.4, slope_err)
-
+    
     res = minimize(distance_fn, [x0, y0, z0], method='Powell')
     x_new, y_new, z_new = res.x
-    # return x_new, y_new, z_new
-    return x0, y0, z0
+    return x_new, y_new, z_new
 
 
 def clear_duplicates(coords):
