@@ -74,7 +74,7 @@ class MyUNet(nn.Module):
     def __init__(self, cfg):
         super(MyUNet, self).__init__()
         self.cfg = cfg
-        self.base_model = EfficientNet.from_pretrained('efficientnet-b0')
+        self.base_model = EfficientNet.from_pretrained(cfg.model.name)
         
         self.conv0 = double_conv(5, 64)
         self.conv1 = double_conv(64, 128)
@@ -85,7 +85,7 @@ class MyUNet(nn.Module):
         
         self.up1 = up(1282 + 1024, 512)
         self.up2 = up(512 + 512, 256)
-        self.outc = nn.Conv2d(256, cfg.n_classes, 1)
+        self.outc = nn.Conv2d(256, cfg.model.params.n_classes, 1)
 
     def forward(self, x):
         batch_size = x.shape[0]

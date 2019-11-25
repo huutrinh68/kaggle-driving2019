@@ -14,5 +14,13 @@ from torch.utils.data import Dataset, DataLoader
 from tqdm import tqdm
 
 import torch
+import torch.nn as nn
+
+#fp16
+from apex import amp
 
 opj = os.path.join
+
+from datetime import datetime
+PROJECT_PATH = os.path.dirname(os.path.realpath(__file__).replace('utils',''))
+IDENTIFIER   = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
