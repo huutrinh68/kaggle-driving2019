@@ -4,22 +4,29 @@ from utils.file import imread
 from utils import kaggle as kaggle
 
 class CarDataset(Dataset):
-
     def __init__(self, cfg):
         self.cfg = cfg 
-        self.df = pd.read_csv(self.cfg.train_csv)
+        self.df = pd.read_csv(self.cfg.dataframe)
+        if cfg.mode in ['train', 'valid']:
+            self.df_train, self.df_valid = self.train_valid_split(self.df)
+            if cfg.mode == 'train':
+                self.df = self.df_train
+            elif cfg.mode == 'valid':
+                self.df = self.df_valid
+
+        print(f'mode: {cfg.mode}, len(df): {len(self.df)}')
     
     def __len__(self):
         return len(self.df)
     
     def __getitem__(self, idx):
         image_name, labels = self.df.values[idx]
-        print(image_name)
-        print(labels)
-        image_path = opj(self.cfg.train_images, image_name+'.jpg')
+        # print(f'image_name: {image_name}')
+        # print(f'labels: {labels}')
+        image_path = opj(self.cfg.img_dir, image_name+'.jpg')
 
         flip = False
-        if self.cfg.train_mode:
+        if self.cfg.mode == 'train':
             flip = np.random.rand() > 0.5
 
         origin_image = imread(image_path, fast_mode=True)
@@ -27,8 +34,15 @@ class CarDataset(Dataset):
         img = np.rollaxis(img, 2, 0)
 
         mask, regr = kaggle.get_mask_and_regr(origin_image, labels, flip=flip)
+        # print(f'mask: {mask}')
+        # print(f'regr: {regr}')
 
         return [img, mask, regr]
+
+    
+    def train_valid_split(self, df):
+        df_train, df_valid = train_test_split(df, test_size=0.1, random_state=42)
+        return df_train, df_valid
     
 
 # dataloader

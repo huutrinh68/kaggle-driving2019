@@ -9,6 +9,10 @@ from utils.file import imread
 import utils.kaggle as kaggle
 
 from datasets import dataset_factory
+from models import model_factory
+from optimizers import optimizer_factory
+from schedulers import scheduler_factory
+from losses import criterion_factory
 
 
 # get args from command line --------------------
@@ -20,9 +24,10 @@ def get_args():
 
 # main
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args = get_args()
     cfg  = Config.fromfile(args.config)
-
+    cfg.device = device
 
     train = pd.read_csv(cfg.train_csv)
     camera_matrix_inv = np.linalg.inv(kaggle.camera_matrix)
@@ -246,8 +251,8 @@ def main():
             plt.savefig(f'eda/{idx}_{ax_i}.png')
                 
 
-    if 1:
-        dataset = dataset_factory.CarDataset(cfg)
+    if 0:
+        dataset = dataset_factory.CarDataset(cfg.data.train)
         img, mask, regr = dataset[0]
 
         plt.figure(figsize=(16,16))
@@ -265,8 +270,29 @@ def main():
         # plt.show()
         plt.savefig(f'eda/regr.png')
 
+    
+    #########
+    if 1:
+        # initial -----------------------------------
+        best = {
+            'loss': float('inf'),
+            'score': 0.0,
+            'epoch': -1,
+        }
+
         train_loader = dataset_factory.get_dataloader(cfg.data.train)
-        
+        valid_loader = dataset_factory.get_dataloader(cfg.data.valid)
+        test_loader = dataset_factory.get_dataloader(cfg.data.test)
+        for i, (img, mask, regr) in enumerate(tqdm(test_loader)):
+            print(i)
+            if i == 3:
+                break
+
+        model = model_factory.get_model(cfg)
+        optimizer = optimizer_factory.get_optimizer(model, cfg)
+        scheduler = scheduler_factory.get_scheduler(cfg, optimizer, best['epoch'])
+
+    
 
 if __name__ == "__main__":
     main()
