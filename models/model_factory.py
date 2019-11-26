@@ -115,5 +115,5 @@ def get_model(cfg):
     model = MyUNet(cfg)
     log.info('\n')
     log.info('** model setting **')
-    log.info(f'model: {model}')
+    # log.info(f'model: {model}')
     return model

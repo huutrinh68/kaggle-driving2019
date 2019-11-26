@@ -18,6 +18,7 @@ from losses import criterion_factory
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ['CUDA_VISIBLE_DEVICES']='0,1,2,3'
+torch.backends.cudnn.benchmark=True
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 ###### get args from command line ---------------
@@ -49,12 +50,12 @@ def main():
     ## model ------------------------------------
     model = model_factory.get_model(cfg)
 
+    model.to(device)
     # multi-gpu----------------------------------
     if torch.cuda.device_count() > 1 and len(cfg.gpu) > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-
-    model.to(device)
+    
 
     ## train model-------------------------------
     do_train(cfg, model)
