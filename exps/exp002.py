@@ -1,6 +1,6 @@
 from __future__ import absolute_import
 from utils.logger import logger, log
-logger.setup('./logs', name='log_model002')
+logger.setup('./outputs/logs', name='log_model002')
 
 from utils.common import *
 import argparse
