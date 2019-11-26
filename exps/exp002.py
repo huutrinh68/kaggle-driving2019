@@ -50,12 +50,11 @@ def main():
     ## model ------------------------------------
     model = model_factory.get_model(cfg)
 
-    model.to(device)
     # multi-gpu----------------------------------
     if torch.cuda.device_count() > 1 and len(cfg.gpu) > 1:
         print("Let's use", torch.cuda.device_count(), "GPUs!")
         model = nn.DataParallel(model)
-    
+    model.to(device)
 
     ## train model-------------------------------
     do_train(cfg, model)
