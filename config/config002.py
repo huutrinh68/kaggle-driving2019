@@ -12,7 +12,7 @@ num_workers = 20
 early_stop = 10
 
 apex = False
-gpu=[0]
+gpu=[0, 1]
 
 # path
 train_csv = 'data/train.csv'
