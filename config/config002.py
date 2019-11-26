@@ -6,7 +6,7 @@ n_fold = 15
 epoch =300
 resume_from = None
 
-batch_size = 2
+batch_size = 10
 num_workers = 20
 # imgsize = (320, 640) #(height, width)
 early_stop = 10
