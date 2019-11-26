@@ -18,19 +18,22 @@ from losses import criterion_factory
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ['CUDA_VISIBLE_DEVICES']='0,1,2,3'
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# get args from command line --------------------
+###### get args from command line ---------------
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('config')
+    parser.add_argument('--fold', nargs='+', type=int)
     return parser.parse_args()
 
 
-# main ------------------------------------------
+###### main -------------------------------------
 def main():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args = get_args()
     cfg  = Config.fromfile(args.config)
+    cfg.fold = args.fold
+    global device
     cfg.device = device
     log.info(cfg)
 
@@ -53,11 +56,12 @@ def main():
 
     model.to(device)
 
-    ## ------------------------------------------
+    ## train model-------------------------------
     do_train(cfg, model)
 
 
-# train model -----------------------------------
+
+###### train model ------------------------------
 def do_train(cfg, model):
     # get criterion -----------------------------
     criterion = criterion_factory.get_criterion(cfg)
@@ -91,8 +95,130 @@ def do_train(cfg, model):
         amp.initialize(model, optimizer, opt_level='O1', verbosity=0)
 
     # setting dataset ---------------------------
-    
+    loader_train = dataset_factory.get_dataloader(cfg.data.train)
+    loader_valid = dataset_factory.get_dataloader(cfg.data.valid)
 
+    # start trainging ---------------------------
+    start_time = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
+    log.info('\n')
+    log.info(f'** start train [fold{cfg.fold}th] {start_time} **\n')
+    log.info('epoch    iter      rate     | smooth_loss/score | valid_loss/score | best_epoch/best_score |  min')
+    log.info('-------------------------------------------------------------------------------------------------')
+
+    for epoch in range(best['epoch']+1, cfg.epoch):
+        end = time.time()
+        util.set_seed(epoch)
+
+        ## train model --------------------------
+        train_results = run_nn(cfg.data.train, 'train', model, loader_train, criterion=criterion, optimizer=optimizer, apex=cfg.apex, epoch=epoch)
+    
+        ## valid model --------------------------
+        with torch.no_grad():
+            val_results = run_nn(cfg.data.valid, 'valid', model, loader_valid, criterion=criterion, epoch=epoch)
+        
+        detail = {
+            'score': val_results['score'],
+            'loss': val_results['loss'],
+            'epoch': epoch,
+        }
+
+        if val_results['loss'] <= best['loss']:
+            best.update(detail)
+            util.save_model(model, optimizer, detail, cfg.fold, os.path.join(cfg.workdir, 'checkpoint'))
+
+
+        log.info('%5.1f   %5d    %0.6f   |  %0.4f  %0.4f  |  %0.4f  %6.4f |  %6.1f     %6.4f    | %3.1f min' % \
+                (epoch+1, len(loader_train), util.get_lr(optimizer), train_results['loss'], train_results['score'], val_results['loss'], val_results['score'], best['epoch'], best['score'], (time.time() - end) / 60))
+        
+        scheduler.step(val_results['loss']) # if scheduler is reducelronplateau
+        # scheduler.step()
+
+        # early stopping-------------------------
+        if cfg.early_stop:
+            if epoch - best['epoch'] > cfg.early_stop:
+                log.info(f'=================================> early stopping!')
+                break
+        time.sleep(0.01)
+
+##### run cnn------------------------------------
+def run_nn(
+    cfg,
+    mode,
+    model, 
+    loader, 
+    criterion=None, 
+    optimizer=None, 
+    scheduler=None,
+    apex=None, 
+    epoch=None):
+
+    if mode in ['train']:
+        model.train()
+    elif mode in ['valid', ]:
+        model.eval()
+    else:
+        raise 
+
+    losses = util.AverageMeter()
+    scores = util.AverageMeter()
+
+    ids_all = []
+    targets_all = []
+    outputs_all = []
+
+    for i, (inputs, targets, regrs) in enumerate(loader):
+        # zero out gradients so we can accumulate new ones over batches
+        if mode in ['train']:
+            optimizer.zero_grad()
+
+        # move data to device
+        inputs = inputs.to(device, dtype=torch.float)
+        targets = targets.to(device, dtype=torch.float)
+        regrs = regrs.to(device, dtype=torch.float)
+
+        outputs = model(inputs)
+        # both train mode and valid mode
+        if mode in ['train', 'valid']:
+            with torch.set_grad_enabled(mode == 'train'):
+                loss = criterion(outputs, targets, regrs)
+                # loss = criterion(torch.sigmoid(outputs), targets)
+
+                loss = loss/cfg.n_grad_acc
+                with torch.no_grad():
+                    losses.update(loss.item())
+        
+        # train mode
+        if mode in ['train']:
+            if apex:
+                with amp.scale_loss(loss, optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                loss.backward() # accumulate loss
+            
+            if (i+1) % cfg.n_grad_acc == 0 or (i+1) == len(loader):
+                torch.nn.utils.clip_grad_norm(model.parameters(), 1.0)
+                optimizer.step() # update
+                optimizer.zero_grad() # flush
+
+        # # compute metrics
+        # score = metrics.dice_score(outputs, targets)
+        # with torch.no_grad():
+        #     scores.update(score.item())
+
+        
+        result = {
+            'loss': losses.avg,
+            'score': scores.avg,
+            'ids': ids_all,
+            'targets': np.array(targets_all),
+            'outputs': np.array(outputs_all),
+        }
+
+        return result
+
+
+
+#####
 if __name__ == "__main__":
     try:
         main()

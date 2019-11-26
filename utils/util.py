@@ -36,3 +36,40 @@ def load_model(path, model, optimizer=None, device=None):
     log.info(f'loaded model from {path}')
 
     return detail
+
+
+# evaluate meters
+class AverageMeter(object):
+    """Computes and stores the average and current value"""
+    def __init__(self):
+        self.reset()
+
+    def reset(self):
+        self.val = 0
+        self.avg = 0
+        self.sum = 0
+        self.count = 0
+
+    def update(self, val, n=1):
+        self.val = val
+        self.sum += val * n
+        self.count += n
+        self.avg = self.sum / self.count
+
+
+def save_model(model, optim, detail, fold, dirname):
+    # path = os.path.join(dirname, 'fold%d_ep%d.pt' % (fold, detail['epoch']))
+    os.makedirs(os.path.join(dirname, str(fold)), exist_ok=True)
+    path = os.path.join(dirname, str(fold), 'top1.pth')
+    torch.save({
+        'state_dict': model.state_dict(),
+        'optim': optim.state_dict(),
+        'detail': detail,
+    }, path)
+
+
+def get_lr(optim):
+    if optim:
+        return optim.param_groups[0]['lr']
+    else:
+        return 0
