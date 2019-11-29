@@ -4,6 +4,7 @@ apex = False
 
 n_fold = 15
 epoch =300
+n_grad_acc = 10
 resume_from = None
 
 batch_size = 4
