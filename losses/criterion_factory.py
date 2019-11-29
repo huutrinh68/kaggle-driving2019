@@ -33,6 +33,5 @@ class CustomLoss(nn.Module):
         return loss
 
 
-
 def get_criterion(cfg):
     return CustomLoss(cfg)

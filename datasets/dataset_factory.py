@@ -33,7 +33,11 @@ class CarDataset(Dataset):
         img = kaggle.preprocess_image(origin_image, flip=flip)
         img = np.rollaxis(img, 2, 0)
 
-        mask, regr = kaggle.get_mask_and_regr(origin_image, labels, flip=flip)
+        if self.cfg.mode in ['train', 'valid']:
+            mask, regr = kaggle.get_mask_and_regr(origin_image, labels, flip=flip)
+            regr = np.rollaxis(regr, 2, 0)
+        else:
+            mask, regr = 0, 0
         # print(f'mask: {mask}')
         # print(f'regr: {regr}')
 
