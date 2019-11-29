@@ -166,6 +166,7 @@ def run_nn(
     targets_all = []
     outputs_all = []
 
+    print(len(loader))
     for i, (inputs, targets, regrs) in enumerate(loader):
         # zero out gradients so we can accumulate new ones over batches
         if mode in ['train']:
