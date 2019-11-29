@@ -4,7 +4,6 @@ apex = False
 
 n_fold = 15
 epoch =300
-n_grad_acc = 10
 resume_from = None
 
 batch_size = 4
@@ -54,7 +53,8 @@ data = dict(
             drop_last=False,
             num_workers=num_workers,
             pin_memory=False,
-        )
+        ),
+        n_grad_acc = 10,
     ),
     valid = dict(
         mode = 'valid',
@@ -66,7 +66,8 @@ data = dict(
             drop_last=False,
             num_workers=num_workers,
             pin_memory=False,
-        )
+        ),
+        n_grad_acc = 10,
     ),
     test = dict(
         mode = 'test',
