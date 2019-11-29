@@ -12,6 +12,9 @@ class CustomLoss(nn.Module):
         self.size_average = size_average
     
     def forward(self, prediction, mask, regr):
+        print(prediction.shape)
+        print(mask.shape)
+        print(regr.shape)
         # Binary mask loss
         pred_mask = torch.sigmoid(prediction[:, 0])
     #     mask_loss = mask * (1 - pred_mask)**2 * torch.log(pred_mask + 1e-12) + (1 - mask) * pred_mask**2 * torch.log(1 - pred_mask + 1e-12)
