@@ -647,7 +647,6 @@ def evaluate(epoch, history=None):
     print('Dev loss: {:.4f}'.format(valid_loss))
 
 
-%%time
 import gc
 
 history = pd.DataFrame()
