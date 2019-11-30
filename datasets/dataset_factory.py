@@ -45,7 +45,7 @@ class CarDataset(Dataset):
 
     
     def train_valid_split(self, df):
-        df_train, df_valid = train_test_split(df, test_size=0.1, random_state=42)
+        df_train, df_valid = train_test_split(df, test_size=0.01, random_state=42)
         return df_train, df_valid
     
 

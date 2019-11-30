@@ -190,7 +190,7 @@ def _regr_back(regr_dict):
 def preprocess_image(img):
     img = img[img.shape[0] // 2:]
     bg = np.ones_like(img) * img.mean(1, keepdims=True).astype(img.dtype)
-    bg = bg[:, :img.shape[1] // 4]
+    bg = bg[:, :img.shape[1] // 6]
     img = np.concatenate([bg, img, bg], 1)
     img = cv2.resize(img, (IMG_WIDTH, IMG_HEIGHT))
     return (img / 255).astype('float32')

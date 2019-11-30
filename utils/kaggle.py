@@ -10,16 +10,15 @@ from sklearn.metrics import mean_absolute_error
 # original shape
 img_shape = (2710, 3384, 3)
 
-img_width = img_shape[1]
+img_width = 2048 #img_shape[1]
 img_height = img_width // 4
 model_scale = 8
 
 distance_thresh_clear = 2
 
-camera_matrix = np.array([
-    [2304.5479, 0,  1686.2379],
-    [0, 2305.8757, 1354.9849],
-    [0, 0, 1]], dtype=np.float32)
+camera_matrix = np.array([[2304.5479, 0,  1686.2379],
+                          [0, 2305.8757, 1354.9849],
+                          [0, 0, 1]], dtype=np.float32)
 
 def str2coords(s, names=['id', 'yaw', 'pitch', 'roll', 'x', 'y', 'z']):
     coords = []
@@ -174,7 +173,7 @@ def get_mask_and_regr(img, labels, flip=False):
         x, y = y, x
         x = (x - img.shape[0] // 2) * img_height / (img.shape[0] // 2) / model_scale
         x = np.round(x).astype('int')
-        y = (y + img.shape[1] // 6) * img_width / (img.shape[1] * 4/3) / model_scale
+        y = (y + img.shape[1] // 4) * img_width / (img.shape[1] * 1.5) / model_scale
         y = np.round(y).astype('int')
         if x >= 0 and x < img_height // model_scale and y >= 0 and y < img_width // model_scale:
             mask[x, y] = 1
