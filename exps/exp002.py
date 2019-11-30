@@ -166,9 +166,9 @@ def run_nn(
     targets_all = []
     outputs_all = []
 
-    log.info(f'len(loader): {len(loader)}')
+    # log.info(f'len(loader): {len(loader)}')
     for i, (inputs, targets, regrs) in enumerate(loader):
-        log.info(f'i: {i}')
+        # log.info(f'i: {i}')
         # zero out gradients so we can accumulate new ones over batches
         if mode in ['train']:
             optimizer.zero_grad()
@@ -178,13 +178,13 @@ def run_nn(
         targets = targets.to(device, dtype=torch.float)
         regrs = regrs.to(device, dtype=torch.float)
 
-        log.info(f'inputs.shape: {inputs.shape}')
-        log.info(f'targets.shape: {targets.shape}')
-        log.info(f'regrs.shape: {regrs.shape}')
+        # log.info(f'inputs.shape: {inputs.shape}')
+        # log.info(f'targets.shape: {targets.shape}')
+        # log.info(f'regrs.shape: {regrs.shape}')
 
         outputs = model(inputs)
-        log.info(f'outputs.shape: {outputs.shape}')
-        
+        # log.info(f'outputs.shape: {outputs.shape}')
+
         # both train mode and valid mode
         if mode in ['train', 'valid']:
             with torch.set_grad_enabled(mode == 'train'):
@@ -214,15 +214,15 @@ def run_nn(
         #     scores.update(score.item())
 
         
-        result = {
-            'loss': losses.avg,
-            'score': scores.avg,
-            'ids': ids_all,
-            'targets': np.array(targets_all),
-            'outputs': np.array(outputs_all),
-        }
+    result = {
+        'loss': losses.avg,
+        'score': scores.avg,
+        'ids': ids_all,
+        'targets': np.array(targets_all),
+        'outputs': np.array(outputs_all),
+    }
 
-        return result
+    return result
 
 
 
