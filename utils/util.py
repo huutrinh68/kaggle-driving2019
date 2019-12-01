@@ -22,7 +22,20 @@ def load_model(path, model, optimizer=None, device=None):
         # remap everthing onto CPU 
         state = torch.load(str(path), map_location=lambda storage, location: storage)
 
-    model.load_state_dict(state['state_dict'], strict=False)
+    state_dict = state['state_dict']
+
+    ####
+    # nn.parallel was used
+    from collections import OrderedDict
+    new_state_dict = OrderedDict()
+    for k, v in state.items():
+        name = k[7:] # remove `module.`
+        new_state_dict[name] = v
+    # load params
+    model.load_state_dict(new_state_dict)
+    ####
+
+    # model.load_state_dict(state_dict)
 
     if optimizer:
         log.info('loading optim too')
