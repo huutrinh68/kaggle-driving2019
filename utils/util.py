@@ -15,6 +15,8 @@ def set_seed(seed):
 
 
 def load_model(path, model, optimizer=None, device=None):
+    print(path)
+    exit(0)
     if device:
         # ramap to device
         state = torch.load(str(path), map_location=device)
