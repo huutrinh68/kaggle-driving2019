@@ -15,8 +15,6 @@ def set_seed(seed):
 
 
 def load_model(path, model, optimizer=None, device=None):
-    print(path)
-    exit(0)
     if device:
         # ramap to device
         state = torch.load(str(path), map_location=device)
@@ -24,6 +22,8 @@ def load_model(path, model, optimizer=None, device=None):
         # remap everthing onto CPU 
         state = torch.load(str(path), map_location=lambda storage, location: storage)
 
+    print(state)
+    exit(0)
     model.load_state_dict(state['state_dict'])
     exit(0)
     if optimizer:
