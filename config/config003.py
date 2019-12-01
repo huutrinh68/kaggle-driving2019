@@ -22,7 +22,7 @@ train_images = 'data/train_images'
 test_images = 'data/test_images'
 
 model = dict(
-    name='efficientnet-b0',
+    name='resnet18',
     params=dict(
         n_classes=8,
     ),

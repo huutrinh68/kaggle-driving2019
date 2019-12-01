@@ -238,8 +238,9 @@ def _load_pretrained(model, pretrained):
 
 class CentResnet(nn.Module):
     '''Mixture of previous classes'''
-    def __init__(self, n_classes):
-        super(CentResnet, self).__init__()
+    def __init__(self, cfg):
+        super(CentResnet, self, cfg).__init__()
+        self.cfg = cfg
         self.base_model = resnet18(pretrained=False)
         
         # Lateral layers convert resnet outputs to a common feature size
@@ -260,11 +261,11 @@ class CentResnet(nn.Module):
         
         self.up1 = up(1282 , 512) #+ 1024
         self.up2 = up(512 + 512, 256)
-        self.outc = nn.Conv2d(256, n_classes, 1)
+        self.outc = nn.Conv2d(256, cfg.model.params.n_classes, 1)
 
     def forward(self, x):
         batch_size = x.shape[0]
-        mesh1 = get_mesh(batch_size, x.shape[2], x.shape[3])
+        mesh1 = get_mesh(batch_size, x.shape[2], x.shape[3], self.cfg)
         x0 = torch.cat([x, mesh1], 1)
         x1 = self.mp(self.conv0(x0))
         x2 = self.mp(self.conv1(x1))
@@ -279,7 +280,7 @@ class CentResnet(nn.Module):
         lat32 = F.relu(self.bn32(self.lat32(feats32)))
         
         # Add positional info
-        mesh2 = get_mesh(batch_size, lat32.shape[2], lat32.shape[3])
+        mesh2 = get_mesh(batch_size, lat32.shape[2], lat32.shape[3], self.cfg)
         feats = torch.cat([lat32, mesh2], 1)
         #print(feats.shape)
         #print (x4.shape)
@@ -334,7 +335,7 @@ class MyUNet(nn.Module):
 
 def get_model(cfg):
     # model = MyUNet(cfg)
-    model = CentResnet(8)
+    model = CentResnet(cfg)
     log.info('\n')
     log.info('** model setting **')
     # log.info(f'model: {model}')
