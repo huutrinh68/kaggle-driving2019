@@ -239,7 +239,7 @@ def _load_pretrained(model, pretrained):
 class CentResnet(nn.Module):
     '''Mixture of previous classes'''
     def __init__(self, cfg):
-        super(CentResnet, self, cfg).__init__()
+        super(CentResnet, self).__init__()
         self.cfg = cfg
         self.base_model = resnet18(pretrained=False)
         
