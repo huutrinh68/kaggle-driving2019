@@ -28,7 +28,7 @@ def load_model(path, model, optimizer=None, device=None):
     # nn.parallel was used
     from collections import OrderedDict
     new_state_dict = OrderedDict()
-    for k, v in state.items():
+    for k, v in state_dict.items():
         name = k[7:] # remove `module.`
         new_state_dict[name] = v
     # load params
