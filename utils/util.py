@@ -22,7 +22,7 @@ def load_model(path, model, optimizer=None, device=None):
         # remap everthing onto CPU 
         state = torch.load(str(path), map_location=lambda storage, location: storage)
 
-    model.load_state_dict(state['state_dict'])
+    model.load_state_dict(state['state_dict'], strict=False)
 
     if optimizer:
         log.info('loading optim too')
