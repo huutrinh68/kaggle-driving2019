@@ -204,8 +204,8 @@ def run_nn(
                 regr_loss = regr_loss/cfg.n_grad_acc
                 with torch.no_grad():
                     losses.update(loss.item())
-                    mask_loss.update(mask_loss.item())
-                    regr_loss.update(regr_loss.item())
+                    mask_losses.update(mask_loss.item())
+                    regr_losses.update(regr_loss.item())
         
         # train mode
         if mode in ['train']:
@@ -228,8 +228,8 @@ def run_nn(
         
     result = {
         'loss': losses.avg,
-        'mask_loss': mask_loss.avg,
-        'regr_loss': regr_loss.avg,
+        'mask_loss': mask_losses.avg,
+        'regr_loss': regr_losses.avg,
         'score': scores.avg,
         'ids': ids_all,
         'targets': np.array(targets_all),
