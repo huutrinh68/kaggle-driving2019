@@ -77,7 +77,7 @@ def make_submission(cfg):
 
     test = pd.read_csv(cfg.data.test.dataframe)
     test['PredictionString'] = predictions
-    test.to_csv(opj(cfg.workdir,test)+'/predictions.csv', index=False)
+    test.to_csv('predictions.csv', index=False)
     log.info(test.head())
 
 
