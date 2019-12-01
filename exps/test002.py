@@ -60,6 +60,8 @@ def make_submission(cfg):
     ## model ------------------------------------
     model = model_factory.get_model(cfg)
     print(model)
+    print(cfg)
+    exit(0)
     util.load_model(model_paths[0], model)
     # model.to(device)
     # model.eval()
