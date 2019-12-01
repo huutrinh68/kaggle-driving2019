@@ -6,10 +6,11 @@ from utils.logger import log
 class CustomLoss(nn.Module):
     __name__ = 'custom_loss'
 
-    def __init__(self, cfg, eps=1e-12, size_average=True):
+    def __init__(self, cfg, eps=1e-12, weight=0.4, size_average=True):
         super().__init__()
         self.eps = eps
         self.size_average = size_average
+        self.weight = weight
     
     def forward(self, prediction, mask, regr):
         # Binary mask loss
@@ -24,10 +25,10 @@ class CustomLoss(nn.Module):
         regr_loss = regr_loss.mean(0)
         
         # Sum
-        loss = mask_loss + regr_loss
+        loss = self.weight*mask_loss + (1-self.weight)*regr_loss
         if not self.size_average:
             loss *= prediction.shape[0]
-        return loss
+        return loss, mask_loss, regr_loss
 
 
 def get_criterion(cfg):

@@ -6,6 +6,10 @@ def get_optimizer(model, cfg):
         optimizer = getattr(torch.optim, cfg.optimizer.name)([
             {'params': model.parameters(), 'lr': cfg.optimizer.params.lr},
         ])
+    if cfg.optimizer.name == "AdamW":
+        optimizer = getattr(torch.optim, cfg.optimizer.name)([
+            {'params': model.parameters(), 'lr': cfg.optimizer.params.lr},
+        ])
     
     log.info('\n')
     log.info('** optim setting **')
