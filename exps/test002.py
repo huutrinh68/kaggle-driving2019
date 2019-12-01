@@ -60,22 +60,22 @@ def make_submission(cfg):
     ## model ------------------------------------
     model = model_factory.get_model(cfg)
     util.load_model(model_paths[0], model)
-    # model.to(device)
-    # model.eval()
+    model.to(device)
+    model.eval()
 
-    # for img, _, _ in tqdm(loader_test):
-    #     with torch.no_grad():
-    #         output = model(img.to(device))
-    #     output = output.data.cpu().numpy()
-    #     for out in output:
-    #         coords = kaggle.extract_coords(out)
-    #         s = kaggle.coords2str(coords)
-    #         predictions.append(s)
+    for img, _, _ in tqdm(loader_test):
+        with torch.no_grad():
+            output = model(img.to(device))
+        output = output.data.cpu().numpy()
+        for out in output:
+            coords = kaggle.extract_coords(out)
+            s = kaggle.coords2str(coords)
+            predictions.append(s)
 
-    # test = pd.read_csv(cfg.data.test.dataframe)
-    # test['PredictionString'] = predictions
-    # test.to_csv(opj(cfg.workdir,test,'predictions.csv'), index=False)
-    # log.info(test.head())
+    test = pd.read_csv(cfg.data.test.dataframe)
+    test['PredictionString'] = predictions
+    test.to_csv(opj(cfg.workdir,test,'predictions.csv'), index=False)
+    log.info(test.head())
 
 
 #####
