@@ -21,6 +21,10 @@ os.environ['CUDA_VISIBLE_DEVICES']='0,1,2,3'
 torch.backends.cudnn.benchmark=True
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+model_paths = [
+    '/home/citynow-cloud/data/driving2019/outputs/model002/checkpoint/0/top1.pth',
+]
+
 ###### get args from command line ---------------
 def get_args():
     parser = argparse.ArgumentParser()
@@ -49,12 +53,13 @@ def main():
     
 
 def make_submission(cfg):
-    prediction = []
+    predictions = []
     # setting dataset ---------------------------
     loader_test = dataset_factory.get_dataloader(cfg.data.test)
     
     ## model ------------------------------------
     model = model_factory.get_model(cfg)
+    util.load_model(model_paths[0], model)
     model.to(device)
     model.eval()
 

@@ -124,7 +124,7 @@ def do_train(cfg, model):
 
         if val_results['loss'] <= best['loss']:
             best.update(detail)
-            util.save_model(model, optimizer, detail, cfg.fold, os.path.join(cfg.workdir, 'checkpoint'))
+            util.save_model(model, optimizer, detail, cfg.fold[0], os.path.join(cfg.workdir, 'checkpoint'))
 
 
         log.info('%5.1f   %5d    %0.6f   |  %0.4f  %0.4f  |  %0.4f  %6.4f |  %6.1f     %6.4f    | %3.1f min' % \
