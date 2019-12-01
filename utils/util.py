@@ -23,6 +23,7 @@ def load_model(path, model, optimizer=None, device=None):
         state = torch.load(str(path), map_location=lambda storage, location: storage)
 
     model.load_state_dict(state['state_dict'])
+    exit(0)
     if optimizer:
         log.info('loading optim too')
         optimizer.load_state_dict(state['optimizer'])
