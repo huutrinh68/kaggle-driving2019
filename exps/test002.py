@@ -63,12 +63,15 @@ def make_submission(cfg):
     model.to(device)
     model.eval()
 
+    train_df = pd.read_csv(cfg.train_csv)
+    regr_model = kaggle.get_regr_model(train_df)
+
     for img, _, _ in tqdm(loader_test):
         with torch.no_grad():
             output = model(img.to(device))
         output = output.data.cpu().numpy()
         for out in output:
-            coords = kaggle.extract_coords(out)
+            coords = kaggle.extract_coords(out, regr_model)
             s = kaggle.coords2str(coords)
             predictions.append(s)
 
