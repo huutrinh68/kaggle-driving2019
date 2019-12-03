@@ -26,8 +26,8 @@ class CarDataset(Dataset):
         image_path = opj(self.cfg.img_dir, image_name+'.jpg')
 
         flip = False
-        if self.cfg.mode == 'train':
-            flip = np.random.rand() > 0.5
+        # if self.cfg.mode == 'train':
+        #     flip = np.random.rand() > 0.5
 
         origin_image = imread(image_path, fast_mode=True)
         img = kaggle.preprocess_image(origin_image, flip=flip)

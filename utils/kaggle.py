@@ -127,9 +127,9 @@ def visualize(img, coords):
 
 
 def _regr_preprocess(regr_dict, flip=False):
-    if flip:
-        for k in ['x', 'pitch', 'roll']:
-            regr_dict[k] = -regr_dict[k]
+    # if flip:
+    #     for k in ['x', 'pitch', 'roll']:
+    #         regr_dict[k] = -regr_dict[k]
     for name in ['x', 'y', 'z']:
         regr_dict[name] = regr_dict[name] / 100
 
@@ -155,11 +155,11 @@ def _regr_back(regr_dict):
 def preprocess_image(img, flip=False):
     img = img[img.shape[0] // 2:]
     bg = np.ones_like(img) * img.mean(1, keepdims=True).astype(img.dtype)
-    bg = bg[:, :img.shape[1] // 6]
+    bg = bg[:, :img.shape[1] // 4]
     img = np.concatenate([bg, img, bg], 1)
     img = cv2.resize(img, (img_width, img_height))
-    if flip:
-        img = img[:,::-1]
+    # if flip:
+    #     img = img[:,::-1]
     return (img / 255).astype('float32')
 
 
@@ -179,9 +179,9 @@ def get_mask_and_regr(img, labels, flip=False):
             mask[x, y] = 1
             regr_dict = _regr_preprocess(regr_dict, flip)
             regr[x, y] = [regr_dict[n] for n in sorted(regr_dict)]
-    if flip:
-        mask = np.array(mask[:,::-1])
-        regr = np.array(regr[:,::-1])
+    # if flip:
+    #     mask = np.array(mask[:,::-1])
+    #     regr = np.array(regr[:,::-1])
     return mask, regr
 
 

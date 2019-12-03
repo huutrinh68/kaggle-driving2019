@@ -6,12 +6,11 @@ from utils.logger import log
 class CustomLoss(nn.Module):
     __name__ = 'custom_loss'
 
-    def __init__(self, cfg, eps=1e-12, size_average=True):
+    def __init__(self, cfg, eps=1e-12):
         super().__init__()
         self.eps = eps
-        self.size_average = size_average
     
-    def forward(self, prediction, mask, regr, weight=0.4):
+    def forward(self, prediction, mask, regr, weight=0.4, size_average=False):
         # Binary mask loss
         pred_mask = torch.sigmoid(prediction[:, 0])
     #     mask_loss = mask * (1 - pred_mask)**2 * torch.log(pred_mask + 1e-12) + (1 - mask) * pred_mask**2 * torch.log(1 - pred_mask + 1e-12)
@@ -25,7 +24,7 @@ class CustomLoss(nn.Module):
         
         # Sum
         loss = weight*mask_loss + (1-weight)*regr_loss
-        if not self.size_average:
+        if not size_average:
             loss *= prediction.shape[0]
         return loss, mask_loss, regr_loss
 

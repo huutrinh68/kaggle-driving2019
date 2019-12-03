@@ -110,11 +110,11 @@ def do_train(cfg, model):
         util.set_seed(epoch)
 
         ## train model --------------------------
-        train_results = run_nn(cfg.data.train, 'train', model, loader_train, criterion=criterion, optimizer=optimizer, apex=cfg.apex, epoch=epoch)
+        train_results = run_nn(cfg.data.train, 'train', model, loader_train, criterion=criterion, optimizer=optimizer, scheduler=scheduler, apex=cfg.apex, epoch=epoch)
     
         ## valid model --------------------------
         with torch.no_grad():
-            val_results = run_nn(cfg.data.valid, 'valid', model, loader_valid, criterion=criterion, epoch=epoch)
+            val_results = run_nn(cfg.data.valid, 'valid', model, loader_valid, criterion=criterion, scheduler=scheduler, epoch=epoch)
         
         detail = {
             'score': val_results['score'],
@@ -132,9 +132,7 @@ def do_train(cfg, model):
                 val_results['loss'], val_results['mask_loss'], val_results['regr_loss'], val_results['score'], \
                     best['epoch'], best['score'], (time.time() - end) / 60))
         
-        if cfg.scheduler.name == 'StepLR':
-            scheduler.step()
-        elif cfg.scheduler.name == 'ReduceLROnPlateau':
+        if cfg.scheduler.name == 'ReduceLROnPlateau':
             scheduler.step(val_results['loss'])
 
         # early stopping-------------------------
@@ -195,10 +193,16 @@ def run_nn(
         if mode in ['train', 'valid']:
             with torch.set_grad_enabled(mode == 'train'):
                 if epoch < cfg.switch_loss_epoch:
-                    loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 1)
+                    if mode in ['train']:
+                        loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 1)
+                    elif model in ['valid']:
+                        loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 1, size_average=False)
                 else:
-                    loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 0.5)
-
+                    if model in ['train']:
+                        loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 0.5)
+                    elif model in ['valid']:
+                        loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 0.5, size_average=False)
+                        
                 loss = loss/cfg.n_grad_acc
                 mask_loss = mask_loss/cfg.n_grad_acc
                 regr_loss = regr_loss/cfg.n_grad_acc
@@ -219,6 +223,8 @@ def run_nn(
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step() # update
                 optimizer.zero_grad() # flush
+
+            scheduler.step()
 
         # # compute metrics
         # score = metrics.dice_score(outputs, targets)
