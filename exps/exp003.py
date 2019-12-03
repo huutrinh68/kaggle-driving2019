@@ -102,8 +102,8 @@ def do_train(cfg, model):
     start_time = datetime.now().strftime('%Y/%m/%d %H:%M:%S')
     log.info('\n')
     log.info(f'** start train [fold{cfg.fold}th] {start_time} **\n')
-    log.info('epoch    iter      rate     | smooth_loss/score | valid_loss/score | best_epoch/best_score |  min')
-    log.info('-------------------------------------------------------------------------------------------------')
+    log.info('epoch    iter      rate     | smooth_loss/mask_loss/regr_loss/score | valid_loss/mask_loss/regr_loss/score | best_epoch/best_score |  min')
+    log.info('-----------------------------------------------------------------------------------------------------------------------------------------')
 
     for epoch in range(best['epoch']+1, cfg.epoch):
         end = time.time()
