@@ -219,7 +219,7 @@ def run_nn(
             else:
                 loss.backward() # accumulate loss
             
-            if (i+1) % cfg.n_grad_acc == 0 or (i+1) == len(loader):
+            if i == 0 or (i+1) % cfg.n_grad_acc == 0 or (i+1) == len(loader):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
                 optimizer.step() # update
                 optimizer.zero_grad() # flush
