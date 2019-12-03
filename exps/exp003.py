@@ -195,12 +195,12 @@ def run_nn(
                 if epoch < cfg.switch_loss_epoch:
                     if mode in ['train']:
                         loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 1)
-                    elif model in ['valid']:
+                    elif mode in ['valid']:
                         loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 1, size_average=False)
                 else:
-                    if model in ['train']:
+                    if mode in ['train']:
                         loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 0.5)
-                    elif model in ['valid']:
+                    elif mode in ['valid']:
                         loss, mask_loss, regr_loss = criterion(outputs, targets, regrs, 0.5, size_average=False)
                         
                 loss = loss/cfg.n_grad_acc
