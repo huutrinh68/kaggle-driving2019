@@ -172,7 +172,6 @@ def run_nn(
 
     # log.info(f'len(loader): {len(loader)}')
     for i, (inputs, targets, regrs) in enumerate(loader):
-        # log.info(f'i: {i}')
         # zero out gradients so we can accumulate new ones over batches
         if mode in ['train']:
             optimizer.zero_grad()
@@ -182,12 +181,7 @@ def run_nn(
         targets = targets.to(device, dtype=torch.float)
         regrs = regrs.to(device, dtype=torch.float)
 
-        # log.info(f'inputs.shape: {inputs.shape}')
-        # log.info(f'targets.shape: {targets.shape}')
-        # log.info(f'regrs.shape: {regrs.shape}')
-
         outputs = model(inputs)
-        # log.info(f'outputs.shape: {outputs.shape}')
 
         # both train mode and valid mode
         if mode in ['train', 'valid']:
