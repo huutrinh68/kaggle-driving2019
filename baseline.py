@@ -258,7 +258,7 @@ train_dataset = CarDataset(df_train, train_images_dir)
 dev_dataset = CarDataset(df_dev, train_images_dir)
 test_dataset = CarDataset(df_test, test_images_dir)
 
-BATCH_SIZE = 2
+BATCH_SIZE = 4
 
 # Create data generators - they will produce batches
 train_loader = DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True, num_workers=4)
