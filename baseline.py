@@ -593,7 +593,7 @@ def train(epoch, history=None):
         else:
             loss,mask_loss, regr_loss = criterion(output, mask_batch, regr_batch,0.5)  
         
-        t.set_description(f'train_loss (l={loss:.3f})(m={mask_loss:.2f}) (r={regr_loss:.4f}')
+        t.set_description(f'train_loss (l={loss:.3f})(m={mask_loss:.2f}) (r={regr_loss:.4f})')
         if history is not None:
             history.loc[epoch + batch_idx / len(train_loader), 'train_loss'] = loss.data.cpu().numpy()
         
