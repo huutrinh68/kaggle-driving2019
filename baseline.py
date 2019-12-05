@@ -553,7 +553,7 @@ class CentResnet(nn.Module):
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(device)
 
-n_epochs = 40
+n_epochs = 20
 
 model = CentResnet(8).to(device)
 optimizer = optim.AdamW(model.parameters(), lr=0.001)
