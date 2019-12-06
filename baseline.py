@@ -502,7 +502,7 @@ class CentResnet(nn.Module):
     '''Mixture of previous classes'''
     def __init__(self, n_classes):
         super(CentResnet, self).__init__()
-        self.base_model = resnet34(pretrained=False)
+        self.base_model = resnet152(pretrained=False)
         
         # Lateral layers convert resnet outputs to a common feature size
         self.lat8 = nn.Conv2d(128, 256, 1)
